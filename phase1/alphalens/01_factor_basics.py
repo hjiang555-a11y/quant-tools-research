@@ -63,7 +63,9 @@ def run_analysis(prices, factor, name="Demo Factor"):
     print(f"\n{'='*60}")
     print(f"  {name} - 分层回测 (Quantile Returns)")
     print(f"{'='*60}")
-    mean_ret_by_q = al.performance.mean_return_by_quantile(factor_data, by_group=False)
+    mean_ret_by_q, _ = al.performance.mean_return_by_quantile(
+        factor_data, by_group=False, by_date=False
+    )
     print(mean_ret_by_q.head(10))
 
     # Step 4: 累积收益（做多最高因子组 vs 做空最低因子组）
@@ -73,7 +75,10 @@ def run_analysis(prices, factor, name="Demo Factor"):
     mean_ret_by_q_daily, _ = al.performance.mean_return_by_quantile(
         factor_data, by_date=True, by_group=False, demeaned=False
     )
-    ls_ret = mean_ret_by_q_daily[5].groupby("date").mean() - mean_ret_by_q_daily[1].groupby("date").mean()
+    # alphalens 返回的 multi-index: (factor_quantile, date)
+    q5 = mean_ret_by_q_daily.xs(5, level="factor_quantile")["1D"]
+    q1 = mean_ret_by_q_daily.xs(1, level="factor_quantile")["1D"]
+    ls_ret = q5.groupby("date").mean() - q1.groupby("date").mean()
     cumulative = (1 + ls_ret).cumprod()
     print(f"初始: 1.0000")
     print(f"最终: {cumulative.iloc[-1]:.4f}")

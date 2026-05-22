@@ -60,7 +60,6 @@ def get_akshare_data(symbol="600519", start="20230101", end="20241231"):
         df = ak.stock_zh_a_hist(symbol=symbol, period="daily",
                                 start_date=start, end_date=end, adjust="qfq")
     except Exception:
-        # 网络不可用时回退到示例
         return None
 
     df = df.rename(columns={
@@ -128,7 +127,7 @@ if __name__ == "__main__":
     strat = results[0]
     print(f"\n======== 策略评估 ========")
     sharpe = strat.analyzers.sharpe.get_analysis()
-    dd = strat.analyzers.drawdown.get_analysis()
+    dd = strat.analyzers.dd.get_analysis()
     trades = strat.analyzers.trades.get_analysis()
 
     sr = sharpe.get("sharperatio", 0)

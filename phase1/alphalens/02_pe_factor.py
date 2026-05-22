@@ -83,15 +83,20 @@ def run_simulated_pe_analysis():
     ic_summary = al.performance.mean_information_coefficient(factor_data)
     print(ic_summary)
 
-    # 分层收益
-    mean_ret, _ = al.performance.mean_return_by_quantile(
+    # 分层收益（先按日期聚合，再按分位聚合）
+    mean_ret_by_q, _ = al.performance.mean_return_by_quantile(
+        factor_data, by_date=False, by_group=False, demeaned=False
+    )
+    print("\n--- Quantile Mean Returns ---")
+    print(mean_ret_by_q)
+
+    # 多空组合 — 需要 daily 数据
+    mean_ret_daily, _ = al.performance.mean_return_by_quantile(
         factor_data, by_date=True, by_group=False, demeaned=False
     )
-    print("\n--- Quantile Mean Returns (1D forward) ---")
-    print(mean_ret.groupby("factor_quantile").mean())
-
-    # 多空组合
-    ls = mean_ret[5].groupby("date").mean() - mean_ret[1].groupby("date").mean()
+    q5 = mean_ret_daily.xs(5, level="factor_quantile")["1D"]
+    q1 = mean_ret_daily.xs(1, level="factor_quantile")["1D"]
+    ls = q5.groupby("date").mean() - q1.groupby("date").mean()
     cumulative = (1 + ls).cumprod()
     print(f"\n--- 多空组合 (Q5 - Q1) ---")
     print(f"累积收益: {cumulative.iloc[-1]:.4f}")

@@ -18,9 +18,10 @@ class RSI(bt.Indicator):
     params = (("period", 14),)
 
     def __init__(self):
-        delta = self.data.close - self.data.close(-1)
-        gain = bt.If(delta > 0, delta, 0)
-        loss = bt.If(delta < 0, -delta, 0)
+        # self.data 在 Indicator 中就是传入的收盘价线，直接用
+        delta = self.data - self.data(-1)
+        gain = bt.If(delta > 0, delta, 0.0)
+        loss = bt.If(delta < 0, -delta, 0.0)
         avg_gain = bt.indicators.EMA(gain, period=self.params.period)
         avg_loss = bt.indicators.EMA(loss, period=self.params.period)
         rs = avg_gain / avg_loss
@@ -130,7 +131,7 @@ if __name__ == "__main__":
 
         strat_result = results[0]
         sharpe = strat_result.analyzers.sharpe.get_analysis()
-        dd = strat_result.analyzers.drawdown.get_analysis()
+        dd = strat_result.analyzers.dd.get_analysis()
 
         sr = sharpe.get("sharperatio", "N/A")
         max_dd = dd.get("max", {}).get("drawdown", 0) if dd.get("max") else 0
